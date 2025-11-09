@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expert Sistem Respirator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            min-height: 100vh;
+        }
+        
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
+        .chat-button {
+            width: 60px;
+            height: 60px;
+            background: #1976d2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            border: none;
+            color: white;
+            font-size: 24px;
+        }
+
+        .chat-button:hover {
+            background: #1565c0;
+            transform: scale(1.1);
+        }
+
+        .chat-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            border: 2px solid #1976d2;
+        }
+
+        .chat-window.open {
+            display: flex;
+        }
+
+        .chat-header {
+            background: #1976d2;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: #1976d2;
+            color: white;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background: white;
+            border: 1px solid #ddd;
+            margin-right: auto;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+        }
+
+        .send-button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 0 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-widget">
+        <button class="chat-button" onclick="toggleChat()">💬</button>
+        
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <strong>🌬️ Expert Respirator</strong>
+                <button class="close-chat" onclick="toggleChat()">×</button>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    Bună! Sunt Expertul în Sistemul Respirator. 😊 Cu ce te pot ajuta?
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="userInput" placeholder="Scrie întrebarea ta..." onkeypress="checkEnter(event)">
+                <button class="send-button" onclick="sendMessage()">Trimite</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw4C2Ritf6pKcE9cHW7RjP1Td7bQsZvZ8YvRq7lB9dFJSmE6dN3t6uX8kQ9w4zHk8B/exec';
+        let chatOpen = false;
+
+        function toggleChat() {
+            chatOpen = !chatOpen;
+            document.getElementById('chatWindow').classList.toggle('open', chatOpen);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const question = input.value.trim();
+            
+            if (!question) return;
+            
+            displayMessage(question, 'user');
+            input.value = '';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `question=${encodeURIComponent(question)}`
+                });
+                
+                const data = await response.json();
+                displayMessage(data.response, 'bot');
+            } catch (error) {
+                displayMessage('⚠️ Eroare de conexiune', 'bot');
+            }
+        }
+        
+        function displayMessage(message, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const msgElement = document.createElement('div');
+            msgElement.className = `message ${sender}-message`;
+            msgElement.textContent = message;
+            messagesDiv.appendChild(msgElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function checkEnter(event) {
+            if (event.key === 'Enter') sendMessage();
+        }
+    </script>
+</body>
+</html>
