@@ -3,22 +3,29 @@
 <head>
     <title>Expert Sistem Respirator</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
             margin: 0;
-            padding: 10px;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-            min-height: 100vh;
+            background-attachment: fixed;
         }
         
         .chat-container {
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: 900px;
+            height: 95vh;
+            margin: 20px auto;
             background: white;
             border-radius: 15px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.1);
             overflow: hidden;
-            height: 580px; /* Înălțime fixă */
+            display: flex;
+            flex-direction: column;
         }
         
         .header {
@@ -26,52 +33,86 @@
             color: white;
             padding: 15px;
             text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .suggestions {
+            padding: 12px;
+            background: #f1f8ff;
+            border-bottom: 1px solid #e3f2fd;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .suggestion-btn {
+            background: #e3f2fd;
+            border: 1px solid #1976d2;
+            color: #1976d2;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .suggestion-btn:hover {
+            background: #1976d2;
+            color: white;
+            transform: translateY(-2px);
         }
         
         .chat-messages {
-            height: 380px; /* Spațiu pentru mesaje */
+            flex: 1;
             overflow-y: auto;
-            padding: 15px;
+            padding: 20px;
             background: #f8f9fa;
         }
         
         .message {
-            margin: 8px 0;
-            padding: 10px 12px;
-            border-radius: 12px;
-            max-width: 85%;
+            margin: 12px 0;
+            padding: 12px 16px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.4;
         }
         
         .user-message {
             background: #1976d2;
             color: white;
             margin-left: auto;
+            border-bottom-right-radius: 5px;
         }
         
         .bot-message {
             background: white;
-            border: 1px solid #ddd;
+            border: 1px solid #e0e0e0;
             margin-right: auto;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         
         .input-container {
-            padding: 15px;
+            padding: 20px;
             background: white;
             border-top: 1px solid #eee;
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            flex-shrink: 0;
         }
         
         .chat-input {
             flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 25px;
+            padding: 14px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
             font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
         }
         
         .chat-input:focus {
-            outline: none;
             border-color: #1976d2;
         }
         
@@ -79,43 +120,23 @@
             background: #1976d2;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 14px 28px;
+            border-radius: 30px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
         }
         
         .send-button:hover {
             background: #1565c0;
-        }
-
-        .suggestions {
-            padding: 10px;
-            background: #f1f8ff;
-            border-bottom: 1px solid #e3f2fd;
-            text-align: center;
-        }
-
-        .suggestion-btn {
-            background: #e3f2fd;
-            border: 1px solid #1976d2;
-            color: #1976d2;
-            padding: 6px 12px;
-            border-radius: 15px;
-            cursor: pointer;
-            margin: 2px;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-
-        .suggestion-btn:hover {
-            background: #1976d2;
-            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
         }
 
         /* Scrollbar personalizat */
         .chat-messages::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
         
         .chat-messages::-webkit-scrollbar-track {
@@ -131,6 +152,23 @@
         .chat-messages::-webkit-scrollbar-thumb:hover {
             background: #1565c0;
         }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+            
+            .input-container {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -141,20 +179,26 @@
         </div>
 
         <div class="suggestions">
-            <button class="suggestion-btn" onclick="askQuestion('Ce sunt plămânii?')">Plămânii</button>
-            <button class="suggestion-btn" onclick="askQuestion('Ce este astmul?')">Astmul</button>
-            <button class="suggestion-btn" onclick="askQuestion('Cum funcționează respirația?')">Respirația</button>
-            <button class="suggestion-btn" onclick="askQuestion('Care este rolul traheei?')">Traheea</button>
+            <button class="suggestion-btn" onclick="askQuestion('Ce sunt plămânii și cum funcționează?')">Plămânii</button>
+            <button class="suggestion-btn" onclick="askQuestion('Ce este astmul și cum se manifestă?')">Astmul</button>
+            <button class="suggestion-btn" onclick="askQuestion('Cum funcționează procesul respirației?')">Respirația</button>
+            <button class="suggestion-btn" onclick="askQuestion('Care este rolul traheei în sistemul respirator?')">Traheea</button>
         </div>
         
         <div class="chat-messages" id="chatMessages">
             <div class="message bot-message">
-                Bună! Sunt Expertul în Sistemul Respirator. 😊 Cu ce te pot ajuta astăzi?
+                👋 Bună! Sunt Expertul în Sistemul Respirator. 😊<br><br>
+                Cu ce te pot ajuta astăzi? Poți să îmi pui întrebări despre:
+                <br>• <strong>Plămâni</strong> - structură și funcții
+                <br>• <strong>Astm</strong> - cauze și simptome  
+                <br>• <strong>Respirație</strong> - mecanisme și procese
+                <br>• <strong>Trahee</strong> - rol și importanță
+                <br><br>Spune-mi ce te interesează!
             </div>
         </div>
         
         <div class="input-container">
-            <input type="text" class="chat-input" id="userInput" placeholder="Scrie întrebarea ta..." onkeypress="checkEnter(event)">
+            <input type="text" class="chat-input" id="userInput" placeholder="Scrie întrebarea ta aici..." onkeypress="checkEnter(event)">
             <button class="send-button" onclick="sendMessage()">Trimite</button>
         </div>
     </div>
@@ -183,7 +227,7 @@
                 const data = await response.json();
                 displayMessage(data.response, 'bot');
             } catch (error) {
-                displayMessage('⚠️ Eroare de conexiune. Încearcă din nou!', 'bot');
+                displayMessage('⚠️ Eroare de conexiune. Te rog să încerci din nou!', 'bot');
             }
         }
         
@@ -209,6 +253,13 @@
         window.addEventListener('load', function() {
             document.getElementById('userInput').focus();
         });
+
+        // Auto-scroll la mesaje noi
+        const chatMessages = document.getElementById('chatMessages');
+        const observer = new MutationObserver(function() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+        observer.observe(chatMessages, { childList: true });
     </script>
 </body>
 </html>
