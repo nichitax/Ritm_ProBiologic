@@ -213,43 +213,52 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbxsgBrV8Yjlh7jwt8yD8HPWPj12cx8FRzmLLPCRUXxvIV7eLb-i6Pw6kCDSm5q0MRmL0g/exec';
         
         async function sendMessage() {
-            const userInput = document.getElementById('userInput');
-            const question = userInput.value.trim();
-            
-            if (!question) return;
-            
-            displayMessage(question, 'user');
-            userInput.value = '';
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `question=${encodeURIComponent(question)}`
-                });
-                
-                const data = await response.json();
-                displayMessage(data.response, 'bot');
-            } catch (error) {
-                displayMessage('⚠️ Eroare de conexiune. Te rog să încerci din nou!', 'bot');
-            }
-        }
+    const userInput = document.getElementById('userInput');
+    const question = userInput.value.trim();
+    
+    if (!question) return;
+    
+    displayMessage(question, 'user');
+    userInput.value = '';
+    
+    const waitingMsg = displayMessage('⏳ Se conectează la expertul AI...', 'bot');
+    
+    try {
+        // SOLUȚIA CORS - folosește proxy
+        const proxyURL = `https://api.cors-anywhere.herokuapp.com/${API_URL}`;
+        
+        const response = await fetch(proxyURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `question=${encodeURIComponent(question)}`
+        });
+        
+        const data = await response.json();
+        waitingMsg.remove();
+        displayMessage(data.response, 'bot');
+        
+    } catch (error) {
+        waitingMsg.remove();
+        displayMessage('⚠️ Eroare de conexiune. Încearcă din nou!', 'bot');
+    }
+}
         
         function askQuestion(question) {
             document.getElementById('userInput').value = question;
             sendMessage();
         }
         
-        function displayMessage(message, sender) {
-            const messagesDiv = document.getElementById('chatMessages');
-            const msgElement = document.createElement('div');
-            msgElement.className = `message ${sender}-message`;
-            msgElement.textContent = message;
-            messagesDiv.appendChild(msgElement);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
+       function displayMessage(message, sender) {
+    const messagesDiv = document.getElementById('chatMessages');
+    const msgElement = document.createElement('div');
+    msgElement.className = `message ${sender}-message`;
+    msgElement.textContent = message;
+    messagesDiv.appendChild(msgElement);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    return msgElement;
+}
         
         function checkEnter(event) {
             if (event.key === 'Enter') sendMessage();
