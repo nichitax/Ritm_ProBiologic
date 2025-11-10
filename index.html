@@ -213,59 +213,63 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbxsgBrV8Yjlh7jwt8yD8HPWPj12cx8FRzmLLPCRUXxvIV7eLb-i6Pw6kCDSm5q0MRmL0g/exec';
     
     async function sendMessage() {
-        const userInput = document.getElementById('userInput');
-        const question = userInput.value.trim();
+    const userInput = document.getElementById('userInput');
+    const question = userInput.value.trim();
+    
+    if (!question) return;
+    
+    displayMessage(question, 'user');
+    userInput.value = '';
+    
+    const waitingMsg = displayMessage('⏳ Expertul respirator analizează...', 'bot');
+    
+    try {
+        // ÎNCEARCĂ DIRECT FĂRĂ NICIUN PROXY
+        console.log('🔄 Încerc conexiune directă...');
         
-        if (!question) return;
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `question=${encodeURIComponent(question)}`
+        });
         
-        displayMessage(question, 'user');
-        userInput.value = '';
+        console.log('✅ Răspuns primit:', response.status);
         
-        const waitingMsg = displayMessage('⏳ Expertul respirator analizează...', 'bot');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
+        const data = await response.json();
+        waitingMsg.remove();
+        displayMessage(data.response, 'bot');
+        
+    } catch (error) {
+        waitingMsg.remove();
+        console.error('❌ Eroare directă:', error);
+        
+        // Încearcă cu no-cors ca ultimă variantă
         try {
-            // ÎNCEARCĂ ACEST PROXY NOU
-            const proxyURL = `https://thingproxy.freeboard.io/fetch/${API_URL}`;
+            const secondWaitingMsg = displayMessage('🔄 Încerc metodă alternativă...', 'bot');
             
-            const response = await fetch(proxyURL, {
+            await fetch(API_URL, {
                 method: 'POST',
+                mode: 'no-cors',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: `question=${encodeURIComponent(question)}`
             });
             
-            const data = await response.json();
-            waitingMsg.remove();
-            displayMessage(data.response, 'bot');
+            secondWaitingMsg.remove();
+            displayMessage('✅ Mesaj trimis către expert! 🌬️\n\n💡 Verifică consola pentru detalii.', 'bot');
             
-        } catch (error) {
-            waitingMsg.remove();
-            
-            try {
-                const secondWaitingMsg = displayMessage('🔄 Încerc ultima metodă...', 'bot');
-                
-                // SAU folosește allorigins cu GET în loc de POST
-                const encodedQuestion = encodeURIComponent(question);
-                const proxyURL2 = `https://api.allorigins.win/get?url=${encodeURIComponent(API_URL + '?question=' + encodedQuestion)}`;
-                
-                const response2 = await fetch(proxyURL2);
-                const data2 = await response2.json();
-                secondWaitingMsg.remove();
-                
-                if (data2.contents) {
-                    const responseContent = JSON.parse(data2.contents);
-                    displayMessage(responseContent.response, 'bot');
-                } else {
-                    throw new Error('No content');
-                }
-                
-            } catch (error2) {
-                // Dacă NICIUN proxy nu merge, arată mesaj clar
-                displayMessage('🤖 **Expert Sistem Respirator - Mod Demo**\n\nÎntrebare: "' + question + '"\n\n💡 **Pentru funcționalitatea completă cu AI-ul expert:**\n📍 Accesează această aplicație prin **Google Sites**\n\n✨ Acolo AI-ul tău va funcționa perfect!', 'bot');
-            }
+        } catch (error2) {
+            displayMessage('❌ Conexiunea directă nu funcționează. \n\n🌐 **Soluție:** Accesează aplicația prin Google Sites pentru funcționalitatea completă!', 'bot');
         }
     }
+}
     
     function askQuestion(question) {
         document.getElementById('userInput').value = question;
