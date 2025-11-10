@@ -209,65 +209,85 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxsgBrV8Yjlh7jwt8yD8HPWPj12cx8FRzmLLPCRUXxvIV7eLb-i6Pw6kCDSm5q0MRmL0g/exec';
-        
-        async function sendMessage() {
-    const userInput = document.getElementById('userInput');
-    const question = userInput.value.trim();
+   <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxsgBrV8Yjlh7jwt8yD8HPWPj12cx8FRzmLLPCRUXxvIV7eLb-i6Pw6kCDSm5q0MRmL0g/exec';
     
-    if (!question) return;
-    
-    displayMessage(question, 'user');
-    userInput.value = '';
-    
-    const waitingMsg = displayMessage('⏳ Se conectează la expertul AI...', 'bot');
-    
-    try {
-        // SOLUȚIA CORS - folosește proxy
-        const proxyURL = `https://api.cors-anywhere.herokuapp.com/${API_URL}`;
+    async function sendMessage() {
+        const userInput = document.getElementById('userInput');
+        const question = userInput.value.trim();
         
-        const response = await fetch(proxyURL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `question=${encodeURIComponent(question)}`
-        });
+        if (!question) return;
         
-        const data = await response.json();
-        waitingMsg.remove();
-        displayMessage(data.response, 'bot');
+        displayMessage(question, 'user');
+        userInput.value = '';
         
-    } catch (error) {
-        waitingMsg.remove();
-        displayMessage('⚠️ Eroare de conexiune. Încearcă din nou!', 'bot');
+        const waitingMsg = displayMessage('⏳ Se conectează la expertul AI...', 'bot');
+        
+        try {
+            // Încearcă mai întâi cu primul proxy
+            const proxyURL = `https://cors-anywhere.herokuapp.com/${API_URL}`;
+            
+            const response = await fetch(proxyURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `question=${encodeURIComponent(question)}`
+            });
+            
+            const data = await response.json();
+            waitingMsg.remove();
+            displayMessage(data.response, 'bot');
+            
+        } catch (error) {
+            waitingMsg.remove();
+            
+            // Încearcă cu un alt proxy dacă primul dă eroare
+            try {
+                const secondWaitingMsg = displayMessage('🔄 Încerc conexiune alternativă...', 'bot');
+                
+                const proxyURL2 = `https://api.allorigins.win/raw?url=${encodeURIComponent(API_URL)}`;
+                const response2 = await fetch(proxyURL2, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `question=${encodeURIComponent(question)}`
+                });
+                
+                const data2 = await response2.json();
+                secondWaitingMsg.remove();
+                displayMessage(data2.response, 'bot');
+                
+            } catch (error2) {
+                displayMessage('⚠️ Eroare de conexiune. Te rog să încerci din nou!', 'bot');
+            }
+        }
     }
-}
-        
-        function askQuestion(question) {
-            document.getElementById('userInput').value = question;
-            sendMessage();
-        }
-        
-       function displayMessage(message, sender) {
-    const messagesDiv = document.getElementById('chatMessages');
-    const msgElement = document.createElement('div');
-    msgElement.className = `message ${sender}-message`;
-    msgElement.textContent = message;
-    messagesDiv.appendChild(msgElement);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    return msgElement;
-}
-        
-        function checkEnter(event) {
-            if (event.key === 'Enter') sendMessage();
-        }
+    
+    function askQuestion(question) {
+        document.getElementById('userInput').value = question;
+        sendMessage();
+    }
+    
+    function displayMessage(message, sender) {
+        const messagesDiv = document.getElementById('chatMessages');
+        const msgElement = document.createElement('div');
+        msgElement.className = `message ${sender}-message`;
+        msgElement.textContent = message;
+        messagesDiv.appendChild(msgElement);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        return msgElement;
+    }
+    
+    function checkEnter(event) {
+        if (event.key === 'Enter') sendMessage();
+    }
 
-        // Focus automat pe input
-        window.addEventListener('load', function() {
-            document.getElementById('userInput').focus();
-        });
-    </script>
+    // Focus automat pe input
+    window.addEventListener('load', function() {
+        document.getElementById('userInput').focus();
+    });
+</script>
 </body>
 </html>
