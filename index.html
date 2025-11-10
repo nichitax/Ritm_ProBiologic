@@ -210,7 +210,7 @@
     </div>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbyHVSDe92yCaBd_H3Vyn5iOFEnIn9Ue7RGYa2Vo9rHo6NkviNumCP0IRaqmZGRO7_6Lbg/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwl5ctwVLk05cxbLInhGzKC-gWn4gSPzmSoHmlDSYoirYHowg01DRX7azRXrjfqjf3mdQ/exec';
     
     async function sendMessage() {
     const userInput = document.getElementById('userInput');
@@ -221,53 +221,28 @@
     displayMessage(question, 'user');
     userInput.value = '';
     
-    const waitingMsg = displayMessage('⏳ Expertul respirator analizează...', 'bot');
+    const waitingMsg = displayMessage('⏳ Testez conexiunea CORS...', 'bot');
     
     try {
-        // ÎNCEARCĂ DIRECT FĂRĂ NICIUN PROXY
-        console.log('🔄 Încerc conexiune directă...');
-        
+        // Test cu headere explicite
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
+                'Origin': 'https://nichitax.github.io'
             },
             body: `question=${encodeURIComponent(question)}`
         });
         
-        console.log('✅ Răspuns primit:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        console.log('🔧 Response headers:', response.headers);
         const data = await response.json();
         waitingMsg.remove();
         displayMessage(data.response, 'bot');
         
     } catch (error) {
         waitingMsg.remove();
-        console.error('❌ Eroare directă:', error);
-        
-        // Încearcă cu no-cors ca ultimă variantă
-        try {
-            const secondWaitingMsg = displayMessage('🔄 Încerc metodă alternativă...', 'bot');
-            
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `question=${encodeURIComponent(question)}`
-            });
-            
-            secondWaitingMsg.remove();
-            displayMessage('✅ Mesaj trimis către expert! 🌬️\n\n💡 Verifică consola pentru detalii.', 'bot');
-            
-        } catch (error2) {
-            displayMessage('❌ Conexiunea directă nu funcționează. \n\n🌐 **Soluție:** Accesează aplicația prin Google Sites pentru funcționalitatea completă!', 'bot');
-        }
+        console.error('🔧 Eroare detaliată:', error);
+        displayMessage('❌ Headerele CORS nu sunt configurate corect în Google Apps Script.', 'bot');
     }
 }
     
