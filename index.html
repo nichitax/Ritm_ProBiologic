@@ -209,7 +209,7 @@
         </div>
     </div>
 
-   <script>
+<script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbxsgBrV8Yjlh7jwt8yD8HPWPj12cx8FRzmLLPCRUXxvIV7eLb-i6Pw6kCDSm5q0MRmL0g/exec';
     
     async function sendMessage() {
@@ -221,18 +221,20 @@
         displayMessage(question, 'user');
         userInput.value = '';
         
-        const waitingMsg = displayMessage('⏳ Se conectează la expertul AI...', 'bot');
+        const waitingMsg = displayMessage('⏳ Expertul respirator analizează...', 'bot');
         
         try {
-            // Încearcă mai întâi cu primul proxy
+            // Folosește proxy CORS cu JSON format
             const proxyURL = `https://cors-anywhere.herokuapp.com/${API_URL}`;
             
             const response = await fetch(proxyURL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
                 },
-                body: `question=${encodeURIComponent(question)}`
+                body: JSON.stringify({
+                    question: question
+                })
             });
             
             const data = await response.json();
@@ -242,7 +244,7 @@
         } catch (error) {
             waitingMsg.remove();
             
-            // Încearcă cu un alt proxy dacă primul dă eroare
+            // Încearcă cu alt proxy dacă primul dă eroare
             try {
                 const secondWaitingMsg = displayMessage('🔄 Încerc conexiune alternativă...', 'bot');
                 
@@ -250,9 +252,11 @@
                 const response2 = await fetch(proxyURL2, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
-                    body: `question=${encodeURIComponent(question)}`
+                    body: JSON.stringify({
+                        question: question
+                    })
                 });
                 
                 const data2 = await response2.json();
@@ -260,7 +264,7 @@
                 displayMessage(data2.response, 'bot');
                 
             } catch (error2) {
-                displayMessage('⚠️ Eroare de conexiune. Te rog să încerci din nou!', 'bot');
+                displayMessage('⚠️ Eroare de conexiune. Te rog să încerci mai târziu!', 'bot');
             }
         }
     }
@@ -284,7 +288,6 @@
         if (event.key === 'Enter') sendMessage();
     }
 
-    // Focus automat pe input
     window.addEventListener('load', function() {
         document.getElementById('userInput').focus();
     });
