@@ -213,61 +213,60 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbxsgBrV8Yjlh7jwt8yD8HPWPj12cx8FRzmLLPCRUXxvIV7eLb-i6Pw6kCDSm5q0MRmL0g/exec';
     
     async function sendMessage() {
-        const userInput = document.getElementById('userInput');
-        const question = userInput.value.trim();
+    const userInput = document.getElementById('userInput');
+    const question = userInput.value.trim();
+    
+    if (!question) return;
+    
+    displayMessage(question, 'user');
+    userInput.value = '';
+    
+    const waitingMsg = displayMessage('⏳ Expertul respirator analizează...', 'bot');
+    
+    try {
+        // Proxy CORS care funcționează în 2024
+        const proxyURL = `https://corsproxy.io/?${encodeURIComponent(API_URL)}`;
         
-        if (!question) return;
+        const response = await fetch(proxyURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `question=${encodeURIComponent(question)}`
+        });
         
-        displayMessage(question, 'user');
-        userInput.value = '';
+        const data = await response.json();
+        waitingMsg.remove();
+        displayMessage(data.response, 'bot');
         
-        const waitingMsg = displayMessage('⏳ Expertul respirator analizează...', 'bot');
+    } catch (error) {
+        waitingMsg.remove();
         
+        // Fallback la alt proxy
         try {
-            // Folosește proxy CORS cu JSON format
-            const proxyURL = `https://cors-anywhere.herokuapp.com/${API_URL}`;
+            const secondWaitingMsg = displayMessage('🔄 Încerc conexiune alternativă...', 'bot');
             
-            const response = await fetch(proxyURL, {
+            const proxyURL2 = `https://api.allorigins.win/get?url=${encodeURIComponent(API_URL)}`;
+            const response2 = await fetch(proxyURL2, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({
-                    question: question
-                })
+                body: `question=${encodeURIComponent(question)}`
             });
             
-            const data = await response.json();
-            waitingMsg.remove();
-            displayMessage(data.response, 'bot');
+            const data2 = await response2.json();
+            secondWaitingMsg.remove();
             
-        } catch (error) {
-            waitingMsg.remove();
+            // allorigins returnează conținutul în câmpul "contents"
+            const responseContent = JSON.parse(data2.contents);
+            displayMessage(responseContent.response, 'bot');
             
-            // Încearcă cu alt proxy dacă primul dă eroare
-            try {
-                const secondWaitingMsg = displayMessage('🔄 Încerc conexiune alternativă...', 'bot');
-                
-                const proxyURL2 = `https://api.allorigins.win/raw?url=${encodeURIComponent(API_URL)}`;
-                const response2 = await fetch(proxyURL2, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        question: question
-                    })
-                });
-                
-                const data2 = await response2.json();
-                secondWaitingMsg.remove();
-                displayMessage(data2.response, 'bot');
-                
-            } catch (error2) {
-                displayMessage('⚠️ Eroare de conexiune. Te rog să încerci mai târziu!', 'bot');
-            }
+        } catch (error2) {
+            displayMessage('🌐 Pentru funcționalitatea completă cu AI, te rog accesează aplicația prin Google Sites!', 'bot');
         }
     }
+}
     
     function askQuestion(question) {
         document.getElementById('userInput').value = question;
