@@ -213,41 +213,21 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbxsgBrV8Yjlh7jwt8yD8HPWPj12cx8FRzmLLPCRUXxvIV7eLb-i6Pw6kCDSm5q0MRmL0g/exec';
     
     async function sendMessage() {
-    const userInput = document.getElementById('userInput');
-    const question = userInput.value.trim();
-    
-    if (!question) return;
-    
-    displayMessage(question, 'user');
-    userInput.value = '';
-    
-    const waitingMsg = displayMessage('⏳ Expertul respirator analizează...', 'bot');
-    
-    try {
-        // Proxy CORS care funcționează în 2024
-        const proxyURL = `https://corsproxy.io/?${encodeURIComponent(API_URL)}`;
+        const userInput = document.getElementById('userInput');
+        const question = userInput.value.trim();
         
-        const response = await fetch(proxyURL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `question=${encodeURIComponent(question)}`
-        });
+        if (!question) return;
         
-        const data = await response.json();
-        waitingMsg.remove();
-        displayMessage(data.response, 'bot');
+        displayMessage(question, 'user');
+        userInput.value = '';
         
-    } catch (error) {
-        waitingMsg.remove();
+        const waitingMsg = displayMessage('⏳ Expertul respirator analizează...', 'bot');
         
-        // Fallback la alt proxy
         try {
-            const secondWaitingMsg = displayMessage('🔄 Încerc conexiune alternativă...', 'bot');
+            // ÎNCEARCĂ ACEST PROXY NOU
+            const proxyURL = `https://thingproxy.freeboard.io/fetch/${API_URL}`;
             
-            const proxyURL2 = `https://api.allorigins.win/get?url=${encodeURIComponent(API_URL)}`;
-            const response2 = await fetch(proxyURL2, {
+            const response = await fetch(proxyURL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -255,18 +235,37 @@
                 body: `question=${encodeURIComponent(question)}`
             });
             
-            const data2 = await response2.json();
-            secondWaitingMsg.remove();
+            const data = await response.json();
+            waitingMsg.remove();
+            displayMessage(data.response, 'bot');
             
-            // allorigins returnează conținutul în câmpul "contents"
-            const responseContent = JSON.parse(data2.contents);
-            displayMessage(responseContent.response, 'bot');
+        } catch (error) {
+            waitingMsg.remove();
             
-        } catch (error2) {
-            displayMessage('🌐 Pentru funcționalitatea completă cu AI, te rog accesează aplicația prin Google Sites!', 'bot');
+            try {
+                const secondWaitingMsg = displayMessage('🔄 Încerc ultima metodă...', 'bot');
+                
+                // SAU folosește allorigins cu GET în loc de POST
+                const encodedQuestion = encodeURIComponent(question);
+                const proxyURL2 = `https://api.allorigins.win/get?url=${encodeURIComponent(API_URL + '?question=' + encodedQuestion)}`;
+                
+                const response2 = await fetch(proxyURL2);
+                const data2 = await response2.json();
+                secondWaitingMsg.remove();
+                
+                if (data2.contents) {
+                    const responseContent = JSON.parse(data2.contents);
+                    displayMessage(responseContent.response, 'bot');
+                } else {
+                    throw new Error('No content');
+                }
+                
+            } catch (error2) {
+                // Dacă NICIUN proxy nu merge, arată mesaj clar
+                displayMessage('🤖 **Expert Sistem Respirator - Mod Demo**\n\nÎntrebare: "' + question + '"\n\n💡 **Pentru funcționalitatea completă cu AI-ul expert:**\n📍 Accesează această aplicație prin **Google Sites**\n\n✨ Acolo AI-ul tău va funcționa perfect!', 'bot');
+            }
         }
     }
-}
     
     function askQuestion(question) {
         document.getElementById('userInput').value = question;
